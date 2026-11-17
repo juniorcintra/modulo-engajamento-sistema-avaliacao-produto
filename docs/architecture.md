@@ -19,7 +19,7 @@ Vamos utilizar as seguintes bibliotecas principais:
 
 - Typescript: Linguagem principal de desenvolvimento com tipagem
 - Next.js: Framework para criacao e gestao de interfaces + APIs
-- Crypto: Geracao de salt + hash da senha
+- bcryptjs (https://www.npmjs.com/package/bcryptjs): Geracao de salt + hash da senha
 - Mastra.ai: Criacao e Customizacao de agentes internos
 - TRPC: Gestao de endpoints
 

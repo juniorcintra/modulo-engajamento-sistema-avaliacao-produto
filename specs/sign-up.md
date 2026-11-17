@@ -45,7 +45,6 @@ Precisamos implementar o fluxo de criacao de contas na plataforma, as pessoas pr
 - Criar a base do projeto com um endpoint inicial para criacao de conta
 - Criar a base do projeto com uma pagina inicial para a interface de criacao de conta
 - Configurar as bibliotecas base
--
 
 ## Voce nao deve
 
