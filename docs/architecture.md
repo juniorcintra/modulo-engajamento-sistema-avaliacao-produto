@@ -11,6 +11,7 @@ Vamos utilizar as seguintes bibliotecas principais:
 - TailWindCSS: Estilizacao
 - Date-FNS: Manipulacao de data/hora
 - Shadcn: Componentizacao base (design system)
+- React Query: Criacao e gestao de queries para ler dados da API e mutations para alterar dados.
 
 ## Back-End
 
@@ -20,6 +21,7 @@ Vamos utilizar as seguintes bibliotecas principais:
 - Next.js: Framework para criacao e gestao de interfaces + APIs
 - Crypto: Geracao de salt + hash da senha
 - Mastra.ai: Criacao e Customizacao de agentes internos
+- TRPC: Gestao de endpoints
 
 ## Banco de Dados
 
