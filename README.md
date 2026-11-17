@@ -194,3 +194,29 @@ Padrões de código e interface estão em [`CLAUDE.md`](CLAUDE.md). Os principai
 - Interface responsiva, com foco visível, contraste adequado e respeito a `prefers-reduced-motion`.
 
 Antes de abrir um PR, rode `npm run lint`.
+
+
+## Login, sessão e cabeçalho (sign-in)
+
+Pessoas com conta entram em `/auth/sign-in` com email e senha.
+
+- **Tela de login** (`/auth/sign-in`): formulário validado no navegador; erros de credencial aparecem em um alerta vermelho com a mensagem genérica "Email ou senha inválidos". Sucesso leva para `/`.
+- **Layout da plataforma**: grupo de rotas `src/app/(platform)/` com cabeçalho. Deslogado mostra o botão **Entrar**; logado mostra avatar (DiceBear), nome completo e email, com menu para **Sair**. As páginas `auth/*` ficam fora desse layout.
+- **Home** (`/`): por enquanto só título e esqueleto.
+- **Sessão**: cookie `session` (httpOnly, `sameSite=lax`, `secure` em produção, 7 dias) com JWT assinado (HS256, biblioteca `jose`). Para ler a sessão no servidor use `getSession()` de `src/server/auth/session.ts` (retorna `{ accountId, firstName, lastName, email }` ou `null`).
+- **Variável nova**: `SESSION_SECRET` no `.env.local` (segredo com 32+ caracteres para assinar o cookie).
+
+### `POST /api/v1/sign-in`
+
+Corpo JSON: `{ "email": "...", "password": "..." }`.
+
+| Status | Significado |
+| --- | --- |
+| `200` | Login feito; cookie definido; retorna `{ id, firstName, lastName, email }` |
+| `400` | Dados mal formatados |
+| `401` | Email ou senha inválidos (mesma resposta para email inexistente, senha errada ou conta inativa) |
+| `500` | Erro interno |
+
+### `POST /api/v1/sign-out`
+
+Remove o cookie de sessão e responde `204`.

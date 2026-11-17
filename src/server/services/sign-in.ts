@@ -2,8 +2,7 @@ import bcrypt from "bcryptjs";
 import type { SignInInput } from "@/lib/schemas/sign-in";
 import { getSupabase } from "@/server/db/supabase";
 
-const DUMMY_HASH =
-  "$2b$10$CwTycUXWue0Thq9StjUM0uJ8.4m3kC1kQ0Z3T1b8nQJ3a1m1y1v8e";
+const DUMMY_HASH = bcrypt.hashSync("senha-inexistente", 10);
 
 export class InvalidCredentialsError extends Error {
   constructor() {
