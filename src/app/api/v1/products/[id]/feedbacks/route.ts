@@ -1,7 +1,8 @@
-import { NextResponse } from "next/server";
+import { after, NextResponse } from "next/server";
 import { z } from "zod";
 import { feedbackSchema } from "@/lib/schemas/feedback";
 import { getSession } from "@/server/auth/session";
+import { refreshAiSummary } from "@/server/services/ai-summary";
 import {
   createFeedback,
   ProductNotFoundError,
@@ -44,6 +45,7 @@ export async function POST(
 
   try {
     const feedback = await createFeedback(id, session.accountId, parsed.data);
+    after(() => refreshAiSummary(id));
     return NextResponse.json({ id: feedback.id }, { status: 201 });
   } catch (error) {
     if (error instanceof ProductNotFoundError) {

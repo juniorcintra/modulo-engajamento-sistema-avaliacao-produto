@@ -7,6 +7,9 @@ export type ProductDetail = {
   imageUrl: string;
   externalLink: string;
   score: number;
+  aiSummary: string | null;
+  aiSummaryFeedbackCount: number;
+  aiSummaryUpdatedAt: string | null;
 };
 
 export async function getProductById(
@@ -14,7 +17,7 @@ export async function getProductById(
 ): Promise<ProductDetail | null> {
   const { data, error } = await getSupabase()
     .from("products")
-    .select("id, name, description, image_url, external_link, score")
+    .select("*")
     .eq("id", id)
     .maybeSingle();
 
@@ -28,5 +31,8 @@ export async function getProductById(
     imageUrl: data.image_url,
     externalLink: data.external_link,
     score: Number(data.score),
+    aiSummary: data.ai_summary ?? null,
+    aiSummaryFeedbackCount: data.ai_summary_feedback_count ?? 0,
+    aiSummaryUpdatedAt: data.ai_summary_updated_at ?? null,
   };
 }

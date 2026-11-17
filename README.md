@@ -17,6 +17,7 @@ Qualquer pessoa navega pelos produtos; quem tem conta entra e avalia.
 | Home pública com lista de produtos e rolagem infinita            | `/`                               |
 | Detalhes do produto com avaliações (público)                     | `/products/{id}`                  |
 | Avaliar um produto (só logado: nota 1-5 + comentário)            | `/products/{id}`                  |
+| Resumo das avaliações gerado por IA (destacado com selo "IA")    | `/products/{id}`                  |
 | Criar conta, com validação em tempo real                         | `/auth/sign-up`                   |
 | Entrar e sair da conta (cabeçalho com avatar, nome e email)      | `/auth/sign-in`                   |
 | API de produtos (listar e cadastrar), contas, login e avaliações | `/api/v1/...` (ver seções abaixo) |
@@ -64,12 +65,14 @@ cp .env.example .env.local        # no Windows (PowerShell): Copy-Item .env.exam
 #    SUPABASE_URL=...
 #    SUPABASE_SERVICE_ROLE_KEY=...
 #    SESSION_SECRET=...   (texto aleatório com 32+ caracteres, assina o cookie de login)
+#    OPENAI_API_KEY=...   (opcional; habilita o resumo das avaliações por IA)
 
 # 4. Crie as tabelas no banco
 #    No "SQL Editor" do painel do Supabase, execute NESTA ORDEM o conteúdo de:
 #      supabase/migrations/20261117000000_create_accounts.sql
 #      supabase/migrations/20261117010000_create_products.sql
 #      supabase/migrations/20261117020000_create_products_feedbacks.sql
+#      supabase/migrations/20261117030000_add_ai_summary_to_products.sql
 
 # 5. Inicie o projeto
 npm run dev
@@ -225,7 +228,8 @@ Mesma política da `accounts`: RLS sem policies públicas; só o servidor acessa
 | Banco de dados      | Supabase (PostgreSQL)                                                             |
 | Qualidade           | Biome (lint e formatação)                                                         |
 | Hospedagem prevista | Vercel                                                                            |
-| Automação prevista  | n8n; agentes internos com Mastra.ai                                               |
+| Automação prevista  | n8n                                                                               |
+| IA                  | Mastra.ai (agentes) + OpenAI `gpt-4o-mini`                                        |
 
 Detalhes em [`docs/architecture.md`](docs/architecture.md).
 
@@ -288,6 +292,30 @@ Migration: `supabase/migrations/20261117020000_create_products_feedbacks.sql` (p
 | `product_id` | text        | Referência a `products.id` (apaga junto com o produto) |
 
 Também usa Row Level Security sem políticas públicas: só o servidor acessa.
+
+---
+
+## Resumo das avaliações por IA
+
+Na página `/products/{id}`, entre as informações do produto e a lista de avaliações, aparece um cartão destacado com o selo **IA**: um resumo geral de todos os comentários, escrito em português por um agente de IA.
+
+**Como funciona**
+
+1. Um agente do [Mastra](https://mastra.ai) (`src/mastra/agents/review-summary-agent.ts`) usa o modelo `openai/gpt-4o-mini`.
+2. Ele recebe o nome do produto, as notas e os comentários (até as 200 avaliações mais recentes, 500 caracteres cada) e devolve um parágrafo curto com o consenso, os elogios e as críticas.
+3. O resumo é salvo na tabela `products` (cache), então a IA **não** é chamada a cada visita.
+4. Ele é gerado em segundo plano logo depois de uma nova avaliação e, como garantia, quando alguém abre um produto cujo resumo está ausente ou desatualizado. Enquanto isso, o cartão mostra "A IA está preparando o resumo...".
+5. Os comentários são tratados só como dados: o agente ignora instruções escritas dentro deles.
+
+**Para ativar**
+
+- Defina `OPENAI_API_KEY` no `.env.local`. Sem a chave, o cartão fica oculto e nada quebra.
+- Execute `supabase/migrations/20261117030000_add_ai_summary_to_products.sql` no SQL Editor do Supabase.
+- Opcional: `AI_SUMMARY_MODEL` troca o modelo (padrão `openai/gpt-4o-mini`).
+
+Colunas novas em `products`: `ai_summary` (texto), `ai_summary_feedback_count` (quantas avaliações o resumo considerou) e `ai_summary_updated_at`.
+
+Código: `src/server/services/ai-summary.ts` (gera e salva) e `src/components/products/ai-summary.tsx` (cartão).
 
 ---
 
