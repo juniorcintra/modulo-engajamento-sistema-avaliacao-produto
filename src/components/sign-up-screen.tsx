@@ -3,6 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { AuthShell } from "@/components/auth/auth-shell";
@@ -126,6 +127,16 @@ export function SignUpScreen() {
             {mutation.isPending ? "Criando conta…" : "Criar conta"}
           </Button>
         </form>
+
+        <p className="text-sm text-muted-foreground">
+          Já tem conta?{" "}
+          <Link
+            href="/auth/sign-in"
+            className="font-semibold text-primary underline-offset-4 hover:underline"
+          >
+            Entrar
+          </Link>
+        </p>
       </div>
     </AuthShell>
   );

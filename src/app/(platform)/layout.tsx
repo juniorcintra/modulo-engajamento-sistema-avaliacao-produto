@@ -1,5 +1,5 @@
-﻿import { SiteHeader } from "@/components/layout/site-header";
-import type { ReactNode } from "react";
+﻿import type { ReactNode } from "react";
+import { SiteHeader } from "@/components/layout/site-header";
 
 export default function PlatformLayout({ children }: { children: ReactNode }) {
   return (

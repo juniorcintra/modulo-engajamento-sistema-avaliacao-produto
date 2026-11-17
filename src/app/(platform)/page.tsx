@@ -1,4 +1,4 @@
-﻿export default function Home() {
+export default function Home() {
   return (
     <section className="grid gap-8">
       <h1 className="font-display text-4xl font-bold tracking-tight">
@@ -8,9 +8,9 @@
         className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
         aria-hidden="true"
       >
-        {Array.from({ length: 6 }, (_, index) => (
+        {["a", "b", "c", "d", "e", "f"].map((id) => (
           <div
-            key={index}
+            key={id}
             className="grid gap-3 rounded-2xl border border-border p-4"
           >
             <div className="h-32 rounded-xl bg-muted motion-safe:animate-pulse" />

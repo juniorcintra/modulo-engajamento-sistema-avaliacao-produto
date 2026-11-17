@@ -4,7 +4,11 @@
   className?: string;
 };
 
-export function UserAvatar({ firstName, lastName, className }: UserAvatarProps) {
+export function UserAvatar({
+  firstName,
+  lastName,
+  className,
+}: UserAvatarProps) {
   const seed = encodeURIComponent(`${firstName} ${lastName}`);
   return (
     // eslint-disable-next-line @next/next/no-img-element
