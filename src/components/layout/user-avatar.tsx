@@ -11,7 +11,7 @@ export function UserAvatar({
 }: UserAvatarProps) {
   const seed = encodeURIComponent(`${firstName} ${lastName}`);
   return (
-    // eslint-disable-next-line @next/next/no-img-element
+    // biome-ignore lint/performance/noImgElement: SVG remoto do DiceBear; next/image bloqueia SVG
     <img
       src={`https://api.dicebear.com/9.x/initials/svg?seed=${seed}`}
       alt=""

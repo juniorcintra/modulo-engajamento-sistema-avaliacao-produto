@@ -23,7 +23,7 @@ export async function signIn(input: SignInInput) {
     input.password,
     data?.password ?? DUMMY_HASH,
   );
-  if (!data || !data.active || !valid) throw new InvalidCredentialsError();
+  if (!data?.active || !valid) throw new InvalidCredentialsError();
 
   return {
     accountId: data.id as string,

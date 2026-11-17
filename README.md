@@ -1,6 +1,6 @@
 # Módulo de Engajamento — Sistema de Avaliação de Produto
 
-Plataforma web onde pessoas poderão avaliar produtos (notas em estrelas e comentários). Este repositório é o **ponto de partida** do projeto e, por enquanto, entrega uma única funcionalidade: **a criação de conta (sign-up)**.
+Plataforma web onde pessoas veem uma lista de produtos e, depois de entrar na conta, deixam avaliações (nota de 1 a 5 estrelas e comentário).
 
 > Projeto de estudo da Pós-Graduação em Engenharia de IA Aplicada.
 
@@ -8,18 +8,21 @@ Plataforma web onde pessoas poderão avaliar produtos (notas em estrelas e comen
 
 ## Em uma frase
 
-Uma pessoa abre a página, preenche nome, sobrenome, e-mail e senha, e sua conta é criada de forma segura no banco de dados.
+Qualquer pessoa navega pelos produtos; quem tem conta entra e avalia.
 
 ## O que já funciona
 
-| Funcionalidade | Onde |
-| --- | --- |
-| Tela de criação de conta, com validação em tempo real | `/auth/sign-up` |
-| Tela de confirmação após criar a conta | `/auth/sign-up/success` |
-| API para criar conta | `POST /api/v1/sign-up` |
-| Senha armazenada de forma segura (hash + salt) | Servidor |
+| Funcionalidade                                                   | Onde                              |
+| ---------------------------------------------------------------- | --------------------------------- |
+| Home pública com lista de produtos e rolagem infinita            | `/`                               |
+| Detalhes do produto com avaliações (público)                     | `/products/{id}`                  |
+| Avaliar um produto (só logado: nota 1-5 + comentário)            | `/products/{id}`                  |
+| Criar conta, com validação em tempo real                         | `/auth/sign-up`                   |
+| Entrar e sair da conta (cabeçalho com avatar, nome e email)      | `/auth/sign-in`                   |
+| API de produtos (listar e cadastrar), contas, login e avaliações | `/api/v1/...` (ver seções abaixo) |
+| Senha armazenada de forma segura (hash + salt)                   | Servidor                          |
 
-**Ainda não existe:** login, avaliações de produtos, envio de e-mails. Isso está fora do escopo atual (ver [`specs/sign-up.md`](specs/sign-up.md)).
+**Ainda não existe:** envio de e-mails, recuperação de senha e painel para gerenciar produtos (eles são cadastrados via API). Specs de cada funcionalidade em [`specs/`](specs/).
 
 ---
 
@@ -60,28 +63,35 @@ cp .env.example .env.local        # no Windows (PowerShell): Copy-Item .env.exam
 # 3. Preencha o .env.local com os dados do seu projeto Supabase
 #    SUPABASE_URL=...
 #    SUPABASE_SERVICE_ROLE_KEY=...
+#    SESSION_SECRET=...   (texto aleatório com 32+ caracteres, assina o cookie de login)
+#    ADMIN_API_KEY=...    (chave para cadastrar produtos via API)
 
-# 4. Crie a tabela no banco
-#    Copie o conteúdo de supabase/migrations/20261117000000_create_accounts.sql
-#    e execute no "SQL Editor" do painel do Supabase
+# 4. Crie as tabelas no banco
+#    No "SQL Editor" do painel do Supabase, execute NESTA ORDEM o conteúdo de:
+#      supabase/migrations/20261117000000_create_accounts.sql
+#      supabase/migrations/20261117010000_create_products.sql
+#      supabase/migrations/20261117020000_create_products_feedbacks.sql
 
 # 5. Inicie o projeto
 npm run dev
+
+# 6. (Opcional) Cadastre produtos de exemplo
+ADMIN_API_KEY=... node scripts/seed-products.mjs 15
 ```
 
-Abra <http://localhost:3000/auth/sign-up> no navegador.
+Abra <http://localhost:3000> no navegador.
 
 > ⚠️ `SUPABASE_SERVICE_ROLE_KEY` é uma chave secreta. Use-a **somente no servidor**, nunca a publique nem envie para o Git (o `.env.local` já é ignorado).
 
 ### Comandos úteis
 
-| Comando | O que faz |
-| --- | --- |
-| `npm run dev` | Inicia em modo desenvolvimento |
-| `npm run build` | Gera a versão de produção |
-| `npm start` | Executa a versão de produção |
-| `npm run lint` | Verifica a qualidade do código (Biome) |
-| `npm run format` | Formata o código automaticamente |
+| Comando          | O que faz                              |
+| ---------------- | -------------------------------------- |
+| `npm run dev`    | Inicia em modo desenvolvimento         |
+| `npm run build`  | Gera a versão de produção              |
+| `npm start`      | Executa a versão de produção           |
+| `npm run lint`   | Verifica a qualidade do código (Biome) |
+| `npm run format` | Formata o código automaticamente       |
 
 ---
 
@@ -103,21 +113,21 @@ Abra <http://localhost:3000/auth/sign-up> no navegador.
 
 **Regras de validação**
 
-| Campo | Regra |
-| --- | --- |
-| `firstName`, `lastName` | Obrigatórios, até 100 caracteres |
-| `email` | Formato válido (é salvo em minúsculas) |
-| `password` | De 8 a 72 caracteres |
-| `confirmPassword` | Deve ser igual a `password` |
+| Campo                   | Regra                                  |
+| ----------------------- | -------------------------------------- |
+| `firstName`, `lastName` | Obrigatórios, até 100 caracteres       |
+| `email`                 | Formato válido (é salvo em minúsculas) |
+| `password`              | De 8 a 72 caracteres                   |
+| `confirmPassword`       | Deve ser igual a `password`            |
 
 **Respostas**
 
-| Status | Significado | Corpo |
-| --- | --- | --- |
-| `201` | Conta criada | `{ "id": "..." }` |
-| `400` | Dados inválidos ou JSON malformado | `{ "message": "Dados inválidos", "errors": { ... } }` |
-| `409` | E-mail já cadastrado | `{ "message": "Este email já tem uma conta. Use outro email." }` |
-| `500` | Erro interno | `{ "message": "Erro interno do servidor" }` |
+| Status | Significado                        | Corpo                                                            |
+| ------ | ---------------------------------- | ---------------------------------------------------------------- |
+| `201`  | Conta criada                       | `{ "id": "..." }`                                                |
+| `400`  | Dados inválidos ou JSON malformado | `{ "message": "Dados inválidos", "errors": { ... } }`            |
+| `409`  | E-mail já cadastrado               | `{ "message": "Este email já tem uma conta. Use outro email." }` |
+| `500`  | Erro interno                       | `{ "message": "Erro interno do servidor" }`                      |
 
 Exemplo com `curl`:
 
@@ -133,15 +143,15 @@ curl -X POST http://localhost:3000/api/v1/sign-up \
 
 Tabela `accounts` (definida em [`supabase/migrations`](supabase/migrations)):
 
-| Coluna | Tipo | Observação |
-| --- | --- | --- |
-| `id` | text | Identificador único gerado com `nanoid` |
-| `first_name` / `last_name` | text | Nome e sobrenome |
-| `email` | text | Único (não permite repetir) |
-| `password` | text | Hash bcrypt, nunca a senha real |
-| `salt` | text | Salt usado no hash |
-| `active` | boolean | Padrão `true` |
-| `created_at` / `updated_at` | timestamptz | Datas automáticas |
+| Coluna                      | Tipo        | Observação                              |
+| --------------------------- | ----------- | --------------------------------------- |
+| `id`                        | text        | Identificador único gerado com `nanoid` |
+| `first_name` / `last_name`  | text        | Nome e sobrenome                        |
+| `email`                     | text        | Único (não permite repetir)             |
+| `password`                  | text        | Hash bcrypt, nunca a senha real         |
+| `salt`                      | text        | Salt usado no hash                      |
+| `active`                    | boolean     | Padrão `true`                           |
+| `created_at` / `updated_at` | timestamptz | Datas automáticas                       |
 
 A tabela usa Row Level Security sem políticas públicas: **só o servidor** (via service role) consegue acessá-la.
 
@@ -149,7 +159,7 @@ A tabela usa Row Level Security sem políticas públicas: **só o servidor** (vi
 
 ## Home — listagem de produtos
 
-A página inicial (`/`) é pública e mostra os produtos em cards (imagem, nome, descrição curta e nota). Ao rolar, novos produtos são carregados automaticamente (*infinite scroll*). Clicar no nome (ou em "Ver produto") leva a `/products/{id}`.
+A página inicial (`/`) é pública e mostra os produtos em cards (imagem, nome, descrição curta e nota). Ao rolar, novos produtos são carregados automaticamente (_infinite scroll_). Clicar no nome (ou em "Ver produto") leva a `/products/{id}`.
 
 **Configuração:** defina `ADMIN_API_KEY` no `.env.local` e execute `supabase/migrations/20261117010000_create_products.sql` no SQL Editor do Supabase.
 
@@ -158,7 +168,20 @@ A página inicial (`/`) é pública e mostra os produtos em cards (imagem, nome,
 Query: `limit` (padrão 12, máximo 50) e `cursor` (opaco, vindo de `nextCursor`).
 
 ```json
-{ "items": [{ "id": "...", "name": "...", "description": null, "imageUrl": "...", "externalLink": "...", "score": 0, "createdAt": "..." }], "nextCursor": "..." }
+{
+  "items": [
+    {
+      "id": "...",
+      "name": "...",
+      "description": null,
+      "imageUrl": "...",
+      "externalLink": "...",
+      "score": 0,
+      "createdAt": "..."
+    }
+  ],
+  "nextCursor": "..."
+}
 ```
 
 `nextCursor` é `null` na última página; sem produtos, `items` é `[]`. `400` para `limit` ou `cursor` inválidos.
@@ -177,15 +200,15 @@ Para popular com exemplos: `ADMIN_API_KEY=... node scripts/seed-products.mjs 15`
 
 ### Tabela `products`
 
-| Coluna | Tipo | Observação |
-| --- | --- | --- |
-| `id` | text | `nanoid` gerado na API |
-| `name` | text | Nome do produto |
-| `description` | text | Opcional |
-| `image_url` | text | URL da imagem |
-| `external_link` | text | Link externo do produto |
-| `score` | numeric(2,1) | Nota média (0 a 5), começa em 0 |
-| `created_at` / `updated_at` | timestamptz | Datas automáticas |
+| Coluna                      | Tipo         | Observação                      |
+| --------------------------- | ------------ | ------------------------------- |
+| `id`                        | text         | `nanoid` gerado na API          |
+| `name`                      | text         | Nome do produto                 |
+| `description`               | text         | Opcional                        |
+| `image_url`                 | text         | URL da imagem                   |
+| `external_link`             | text         | Link externo do produto         |
+| `score`                     | numeric(2,1) | Nota média (0 a 5), começa em 0 |
+| `created_at` / `updated_at` | timestamptz  | Datas automáticas               |
 
 Mesma política da `accounts`: RLS sem policies públicas; só o servidor acessa.
 
@@ -193,15 +216,15 @@ Mesma política da `accounts`: RLS sem policies públicas; só o servidor acessa
 
 ## Tecnologias
 
-| Camada | Ferramentas |
-| --- | --- |
-| Front-end | Next.js, React, TypeScript, Tailwind CSS, shadcn/ui, React Hook Form, React Query |
-| Validação | Zod (o mesmo schema vale no navegador e no servidor) |
-| Back-end | Next.js (rotas de API), tRPC, bcryptjs, nanoid |
-| Banco de dados | Supabase (PostgreSQL) |
-| Qualidade | Biome (lint e formatação) |
-| Hospedagem prevista | Vercel |
-| Automação prevista | n8n; agentes internos com Mastra.ai |
+| Camada              | Ferramentas                                                                       |
+| ------------------- | --------------------------------------------------------------------------------- |
+| Front-end           | Next.js, React, TypeScript, Tailwind CSS, shadcn/ui, React Hook Form, React Query |
+| Validação           | Zod (o mesmo schema vale no navegador e no servidor)                              |
+| Back-end            | Next.js (rotas de API), tRPC, bcryptjs, nanoid                                    |
+| Banco de dados      | Supabase (PostgreSQL)                                                             |
+| Qualidade           | Biome (lint e formatação)                                                         |
+| Hospedagem prevista | Vercel                                                                            |
+| Automação prevista  | n8n; agentes internos com Mastra.ai                                               |
 
 Detalhes em [`docs/architecture.md`](docs/architecture.md).
 
@@ -213,15 +236,17 @@ Detalhes em [`docs/architecture.md`](docs/architecture.md).
 ├── docs/                  Documentação de arquitetura
 ├── specs/                 Especificações das funcionalidades (comece por aqui!)
 │   ├── _template.md       Modelo para novas specs
-│   └── sign-up.md         Spec da criação de conta
+│   └── sign-up, sign-in, home, feedback
 ├── supabase/migrations/   Scripts SQL do banco
+├── scripts/               Utilitários (seed de produtos)
 └── src/
-    ├── app/               Páginas e rotas de API (Next.js)
-    │   ├── auth/sign-up/  Telas de cadastro e sucesso
-    │   └── api/           /api/v1/sign-up e /api/trpc
-    ├── components/        Componentes visuais (formulário, campos, botões)
+    ├── app/
+    │   ├── (platform)/    Páginas com cabeçalho: home (/) e /products/[id]
+    │   ├── auth/          Telas de sign-in, sign-up e sucesso
+    │   └── api/           /api/v1/{sign-up,sign-in,sign-out,products,...} e /api/trpc
+    ├── components/        Componentes visuais (layout, produtos, formulários, ui)
     ├── lib/schemas/       Regras de validação (Zod)
-    └── server/            Lógica do servidor: banco, tRPC, serviços
+    └── server/            Lógica do servidor: auth/sessão, banco, tRPC, serviços
 ```
 
 ---
@@ -238,13 +263,13 @@ Exige sessão (cookie de login). O autor é sempre a pessoa logada.
 { "score": 5, "comment": "Produto excelente!" }
 ```
 
-| Status | Significado |
-| --- | --- |
-| `201` | Avaliação criada: `{ "id": "..." }` |
-| `400` | Nota fora de 1-5, comentário vazio/maior que 1000 caracteres ou JSON inválido |
-| `401` | Sem login |
-| `404` | Produto não existe |
-| `500` | Erro interno |
+| Status | Significado                                                                   |
+| ------ | ----------------------------------------------------------------------------- |
+| `201`  | Avaliação criada: `{ "id": "..." }`                                           |
+| `400`  | Nota fora de 1-5, comentário vazio/maior que 1000 caracteres ou JSON inválido |
+| `401`  | Sem login                                                                     |
+| `404`  | Produto não existe                                                            |
+| `500`  | Erro interno                                                                  |
 
 Depois de gravar, a nota média do produto (`products.score`) é recalculada.
 
@@ -252,14 +277,14 @@ Depois de gravar, a nota média do produto (`products.score`) é recalculada.
 
 Migration: `supabase/migrations/20261117020000_create_products_feedbacks.sql` (precisa das tabelas `accounts` e `products`).
 
-| Coluna | Tipo | Observação |
-| --- | --- | --- |
-| `id` | text | `nanoid` |
-| `score` | int | Nota de 1 a 5 |
-| `comment` | text | Comentário |
-| `created_at` | timestamptz | Automático |
-| `created_by` | text | Referência a `accounts.id` |
-| `product_id` | text | Referência a `products.id` (apaga junto com o produto) |
+| Coluna       | Tipo        | Observação                                             |
+| ------------ | ----------- | ------------------------------------------------------ |
+| `id`         | text        | `nanoid`                                               |
+| `score`      | int         | Nota de 1 a 5                                          |
+| `comment`    | text        | Comentário                                             |
+| `created_at` | timestamptz | Automático                                             |
+| `created_by` | text        | Referência a `accounts.id`                             |
+| `product_id` | text        | Referência a `products.id` (apaga junto com o produto) |
 
 Também usa Row Level Security sem políticas públicas: só o servidor acessa.
 
@@ -278,14 +303,12 @@ Padrões de código e interface estão em [`CLAUDE.md`](CLAUDE.md). Os principai
 
 Antes de abrir um PR, rode `npm run lint`.
 
-
 ## Login, sessão e cabeçalho (sign-in)
 
 Pessoas com conta entram em `/auth/sign-in` com email e senha.
 
 - **Tela de login** (`/auth/sign-in`): formulário validado no navegador; erros de credencial aparecem em um alerta vermelho com a mensagem genérica "Email ou senha inválidos". Sucesso leva para `/`.
 - **Layout da plataforma**: grupo de rotas `src/app/(platform)/` com cabeçalho. Deslogado mostra o botão **Entrar**; logado mostra avatar (DiceBear), nome completo e email, com menu para **Sair**. As páginas `auth/*` ficam fora desse layout.
-- **Home** (`/`): por enquanto só título e esqueleto.
 - **Sessão**: cookie `session` (httpOnly, `sameSite=lax`, `secure` em produção, 7 dias) com JWT assinado (HS256, biblioteca `jose`). Para ler a sessão no servidor use `getSession()` de `src/server/auth/session.ts` (retorna `{ accountId, firstName, lastName, email }` ou `null`).
 - **Variável nova**: `SESSION_SECRET` no `.env.local` (segredo com 32+ caracteres para assinar o cookie).
 
@@ -293,12 +316,12 @@ Pessoas com conta entram em `/auth/sign-in` com email e senha.
 
 Corpo JSON: `{ "email": "...", "password": "..." }`.
 
-| Status | Significado |
-| --- | --- |
-| `200` | Login feito; cookie definido; retorna `{ id, firstName, lastName, email }` |
-| `400` | Dados mal formatados |
-| `401` | Email ou senha inválidos (mesma resposta para email inexistente, senha errada ou conta inativa) |
-| `500` | Erro interno |
+| Status | Significado                                                                                     |
+| ------ | ----------------------------------------------------------------------------------------------- |
+| `200`  | Login feito; cookie definido; retorna `{ id, firstName, lastName, email }`                      |
+| `400`  | Dados mal formatados                                                                            |
+| `401`  | Email ou senha inválidos (mesma resposta para email inexistente, senha errada ou conta inativa) |
+| `500`  | Erro interno                                                                                    |
 
 ### `POST /api/v1/sign-out`
 
