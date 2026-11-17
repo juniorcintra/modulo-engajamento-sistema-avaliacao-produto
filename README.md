@@ -226,6 +226,45 @@ Detalhes em [`docs/architecture.md`](docs/architecture.md).
 
 ---
 
+## Feature: avaliações de produto (feedback)
+
+Página pública de detalhes do produto em **`/products/[id]`**: mostra o produto (imagem, nome, descrição, nota média e botão para o link externo), todas as avaliações (mais recentes primeiro, com nome + inicial do sobrenome, avatar, estrelas, comentário e data) e, por último, o formulário para avaliar. Quem não está logado vê um bloco "Entre para avaliar" com os botões **Entrar** e **Criar conta**; quem está logado envia nota de 1 a 5 + comentário. Cada pessoa pode avaliar o mesmo produto mais de uma vez. Produto inexistente mostra a página "Produto não encontrado".
+
+### `POST /api/v1/products/{id}/feedbacks`
+
+Exige sessão (cookie de login). O autor é sempre a pessoa logada.
+
+```json
+{ "score": 5, "comment": "Produto excelente!" }
+```
+
+| Status | Significado |
+| --- | --- |
+| `201` | Avaliação criada: `{ "id": "..." }` |
+| `400` | Nota fora de 1-5, comentário vazio/maior que 1000 caracteres ou JSON inválido |
+| `401` | Sem login |
+| `404` | Produto não existe |
+| `500` | Erro interno |
+
+Depois de gravar, a nota média do produto (`products.score`) é recalculada.
+
+### Tabela `products_feedbacks`
+
+Migration: `supabase/migrations/20261117020000_create_products_feedbacks.sql` (precisa das tabelas `accounts` e `products`).
+
+| Coluna | Tipo | Observação |
+| --- | --- | --- |
+| `id` | text | `nanoid` |
+| `score` | int | Nota de 1 a 5 |
+| `comment` | text | Comentário |
+| `created_at` | timestamptz | Automático |
+| `created_by` | text | Referência a `accounts.id` |
+| `product_id` | text | Referência a `products.id` (apaga junto com o produto) |
+
+Também usa Row Level Security sem políticas públicas: só o servidor acessa.
+
+---
+
 ## Como contribuir
 
 O projeto segue **desenvolvimento guiado por especificação**: toda funcionalidade nova começa com um arquivo em `specs/` (use [`specs/_template.md`](specs/_template.md)) descrevendo contexto, requisitos e critérios de aceitação.
