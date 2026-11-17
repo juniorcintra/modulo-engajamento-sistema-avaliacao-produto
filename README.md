@@ -64,7 +64,6 @@ cp .env.example .env.local        # no Windows (PowerShell): Copy-Item .env.exam
 #    SUPABASE_URL=...
 #    SUPABASE_SERVICE_ROLE_KEY=...
 #    SESSION_SECRET=...   (texto aleatório com 32+ caracteres, assina o cookie de login)
-#    ADMIN_API_KEY=...    (chave para cadastrar produtos via API)
 
 # 4. Crie as tabelas no banco
 #    No "SQL Editor" do painel do Supabase, execute NESTA ORDEM o conteúdo de:
@@ -76,7 +75,7 @@ cp .env.example .env.local        # no Windows (PowerShell): Copy-Item .env.exam
 npm run dev
 
 # 6. (Opcional) Cadastre produtos de exemplo
-ADMIN_API_KEY=... node scripts/seed-products.mjs 15
+node scripts/seed-products.mjs 15
 ```
 
 Abra <http://localhost:3000> no navegador.
@@ -161,7 +160,7 @@ A tabela usa Row Level Security sem políticas públicas: **só o servidor** (vi
 
 A página inicial (`/`) é pública e mostra os produtos em cards (imagem, nome, descrição curta e nota). Ao rolar, novos produtos são carregados automaticamente (_infinite scroll_). Clicar no nome (ou em "Ver produto") leva a `/products/{id}`.
 
-**Configuração:** defina `ADMIN_API_KEY` no `.env.local` e execute `supabase/migrations/20261117010000_create_products.sql` no SQL Editor do Supabase.
+**Configuração:** execute `supabase/migrations/20261117010000_create_products.sql` no SQL Editor do Supabase.
 
 ### `GET /api/v1/products` (público)
 
@@ -186,17 +185,19 @@ Query: `limit` (padrão 12, máximo 50) e `cursor` (opaco, vindo de `nextCursor`
 
 `nextCursor` é `null` na última página; sem produtos, `items` é `[]`. `400` para `limit` ou `cursor` inválidos.
 
-### `POST /api/v1/products` (protegido)
+### `POST /api/v1/products` (público, sem autenticação)
 
-Header `x-api-key` igual a `ADMIN_API_KEY`. Corpo: `name`, `externalLink` (URL http/https), `imageUrl` (URL http/https) e `description` (opcional). Respostas: `201 { "id" }`, `400` dados inválidos, `401` chave ausente ou incorreta.
+Recebe um JSON com `name`, `link` (URL http/https do produto, salva em `external_link`), `image` (URL http/https da imagem, salva em `image_url`) e `description` (opcional). Respostas: `201 { "id" }`, `400` dados inválidos (com o detalhe por campo) e `500` erro interno.
+
+> ⚠️ Como não exige autenticação, qualquer pessoa que conheça a URL consegue cadastrar produtos. Se isso virar um problema, vale voltar a proteger com uma chave.
 
 ```bash
 curl -X POST http://localhost:3000/api/v1/products \
-  -H "Content-Type: application/json" -H "x-api-key: $ADMIN_API_KEY" \
-  -d '{"name":"Fone XYZ","externalLink":"https://exemplo.com/xyz","imageUrl":"https://exemplo.com/xyz.jpg"}'
+  -H "Content-Type: application/json" \
+  -d '{"name":"Fone XYZ","link":"https://exemplo.com/xyz","image":"https://exemplo.com/xyz.jpg"}'
 ```
 
-Para popular com exemplos: `ADMIN_API_KEY=... node scripts/seed-products.mjs 15`.
+Para popular com exemplos: `node scripts/seed-products.mjs 15`.
 
 ### Tabela `products`
 

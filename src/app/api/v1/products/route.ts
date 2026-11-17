@@ -1,4 +1,3 @@
-import { timingSafeEqual } from "node:crypto";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import {
@@ -10,15 +9,6 @@ import {
   InvalidCursorError,
   listProducts,
 } from "@/server/services/products";
-
-function isAuthorized(request: Request) {
-  const expected = process.env.ADMIN_API_KEY;
-  const received = request.headers.get("x-api-key");
-  if (!expected || !received) return false;
-  const a = Buffer.from(expected);
-  const b = Buffer.from(received);
-  return a.length === b.length && timingSafeEqual(a, b);
-}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -51,10 +41,6 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  if (!isAuthorized(request)) {
-    return NextResponse.json({ message: "Não autorizado" }, { status: 401 });
-  }
-
   let body: unknown;
   try {
     body = await request.json();
