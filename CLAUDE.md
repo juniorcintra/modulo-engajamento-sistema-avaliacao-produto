@@ -2,6 +2,13 @@
 
 Regras que valem para todo o código deste repositório. Leia antes de criar ou alterar interface.
 
+## Documentação (README)
+
+- **Toda e qualquer mudança, nova funcionalidade ou melhoria implementada deve estar atualizada no `README.md` ao final de cada execução.**
+- Isso inclui: novas telas e rotas, endpoints da API, variáveis de ambiente, tabelas/colunas do banco, dependências, comandos, estrutura de pastas e o que passou a funcionar (ou deixou de existir).
+- Mantenha o README auto-explicativo, intuitivo e compreensível tanto para pessoas leigas quanto técnicas.
+- Não encerre uma tarefa sem conferir se o README ainda reflete o estado real do projeto.
+
 ## Interface (UI)
 
 ### Botões e elementos clicáveis
