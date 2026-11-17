@@ -1,0 +1,14 @@
+create table if not exists public.accounts (
+  id text primary key,
+  first_name text not null,
+  last_name text not null,
+  email text not null unique,
+  password text not null,
+  salt text not null,
+  active boolean not null default true,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+-- Acesso apenas via service role (servidor); nenhuma policy para anon/authenticated.
+alter table public.accounts enable row level security;
