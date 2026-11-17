@@ -147,6 +147,50 @@ A tabela usa Row Level Security sem políticas públicas: **só o servidor** (vi
 
 ---
 
+## Home — listagem de produtos
+
+A página inicial (`/`) é pública e mostra os produtos em cards (imagem, nome, descrição curta e nota). Ao rolar, novos produtos são carregados automaticamente (*infinite scroll*). Clicar no nome (ou em "Ver produto") leva a `/products/{id}`.
+
+**Configuração:** defina `ADMIN_API_KEY` no `.env.local` e execute `supabase/migrations/20261117010000_create_products.sql` no SQL Editor do Supabase.
+
+### `GET /api/v1/products` (público)
+
+Query: `limit` (padrão 12, máximo 50) e `cursor` (opaco, vindo de `nextCursor`).
+
+```json
+{ "items": [{ "id": "...", "name": "...", "description": null, "imageUrl": "...", "externalLink": "...", "score": 0, "createdAt": "..." }], "nextCursor": "..." }
+```
+
+`nextCursor` é `null` na última página; sem produtos, `items` é `[]`. `400` para `limit` ou `cursor` inválidos.
+
+### `POST /api/v1/products` (protegido)
+
+Header `x-api-key` igual a `ADMIN_API_KEY`. Corpo: `name`, `externalLink` (URL http/https), `imageUrl` (URL http/https) e `description` (opcional). Respostas: `201 { "id" }`, `400` dados inválidos, `401` chave ausente ou incorreta.
+
+```bash
+curl -X POST http://localhost:3000/api/v1/products \
+  -H "Content-Type: application/json" -H "x-api-key: $ADMIN_API_KEY" \
+  -d '{"name":"Fone XYZ","externalLink":"https://exemplo.com/xyz","imageUrl":"https://exemplo.com/xyz.jpg"}'
+```
+
+Para popular com exemplos: `ADMIN_API_KEY=... node scripts/seed-products.mjs 15`.
+
+### Tabela `products`
+
+| Coluna | Tipo | Observação |
+| --- | --- | --- |
+| `id` | text | `nanoid` gerado na API |
+| `name` | text | Nome do produto |
+| `description` | text | Opcional |
+| `image_url` | text | URL da imagem |
+| `external_link` | text | Link externo do produto |
+| `score` | numeric(2,1) | Nota média (0 a 5), começa em 0 |
+| `created_at` / `updated_at` | timestamptz | Datas automáticas |
+
+Mesma política da `accounts`: RLS sem policies públicas; só o servidor acessa.
+
+---
+
 ## Tecnologias
 
 | Camada | Ferramentas |
