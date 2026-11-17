@@ -5,9 +5,9 @@ import { useMutation } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import type { ReactNode } from "react";
 import { useForm } from "react-hook-form";
 import { AuthShell } from "@/components/auth/auth-shell";
-import { ReviewPreview } from "@/components/auth/review-preview";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Field } from "@/components/ui/field";
@@ -29,12 +29,11 @@ async function postSignUp(data: SignUpInput) {
   }
 }
 
-export function SignUpScreen() {
+export function SignUpScreen({ panelExtra }: { panelExtra?: ReactNode }) {
   const router = useRouter();
   const {
     register,
     handleSubmit,
-    watch,
     formState: { errors },
   } = useForm<SignUpInput>({ resolver: zodResolver(signUpSchema) });
 
@@ -44,14 +43,7 @@ export function SignUpScreen() {
   });
 
   return (
-    <AuthShell
-      panelExtra={
-        <ReviewPreview
-          firstName={watch("firstName") ?? ""}
-          lastName={watch("lastName") ?? ""}
-        />
-      }
-    >
+    <AuthShell panelExtra={panelExtra}>
       <div className="grid gap-8">
         <header className="grid gap-2">
           <h1 className="font-display text-4xl font-bold tracking-tight">

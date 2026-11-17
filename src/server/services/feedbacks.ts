@@ -44,6 +44,40 @@ export async function listFeedbacks(productId: string): Promise<Feedback[]> {
   });
 }
 
+export type LatestFeedback = Feedback & {
+  product: { id: string; name: string };
+};
+
+export async function getLatestFeedback(): Promise<LatestFeedback | null> {
+  const { data, error } = await getSupabase()
+    .from("products_feedbacks")
+    .select(
+      "id, score, comment, created_at, author:accounts!created_by(id, first_name, last_name), product:products!product_id(id, name)",
+    )
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return null;
+
+  const author = Array.isArray(data.author) ? data.author[0] : data.author;
+  const product = Array.isArray(data.product) ? data.product[0] : data.product;
+  if (!product) return null;
+  const first = author?.first_name ?? "Pessoa";
+  const initial = author?.last_name?.trim().charAt(0).toUpperCase();
+
+  return {
+    id: data.id,
+    score: data.score,
+    comment: data.comment,
+    createdAt: data.created_at,
+    authorName: initial ? `${first} ${initial}.` : first,
+    authorSeed: author?.id ?? data.id,
+    product: { id: product.id, name: product.name },
+  };
+}
+
 export async function createFeedback(
   productId: string,
   accountId: string,

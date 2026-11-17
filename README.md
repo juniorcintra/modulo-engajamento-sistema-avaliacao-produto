@@ -308,6 +308,7 @@ Antes de abrir um PR, rode `npm run lint`.
 Pessoas com conta entram em `/auth/sign-in` com email e senha.
 
 - **Tela de login** (`/auth/sign-in`): formulário validado no navegador; erros de credencial aparecem em um alerta vermelho com a mensagem genérica "Email ou senha inválidos". Sucesso leva para `/`.
+- **Última avaliação no painel lateral**: as telas de login e de criação de conta mostram, no painel da esquerda (telas largas), a avaliação mais recente feita na plataforma: autor, produto (com link), nota, comentário e quando foi feita. Sem avaliações, o painel fica sem o cartão. Componente: `src/components/auth/latest-review.tsx`.
 - **Layout da plataforma**: grupo de rotas `src/app/(platform)/` com cabeçalho. Deslogado mostra o botão **Entrar**; logado mostra avatar (DiceBear), nome completo e email, com menu para **Sair**. As páginas `auth/*` ficam fora desse layout.
 - **Sessão**: cookie `session` (httpOnly, `sameSite=lax`, `secure` em produção, 7 dias) com JWT assinado (HS256, biblioteca `jose`). Para ler a sessão no servidor use `getSession()` de `src/server/auth/session.ts` (retorna `{ accountId, firstName, lastName, email }` ou `null`).
 - **Variável nova**: `SESSION_SECRET` no `.env.local` (segredo com 32+ caracteres para assinar o cookie).

@@ -5,6 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import type { ReactNode } from "react";
 import { useForm } from "react-hook-form";
 import { AuthShell } from "@/components/auth/auth-shell";
 import { Alert } from "@/components/ui/alert";
@@ -27,7 +28,7 @@ async function postSignIn(data: SignInInput) {
   }
 }
 
-export function SignInScreen() {
+export function SignInScreen({ panelExtra }: { panelExtra?: ReactNode }) {
   const router = useRouter();
   const {
     register,
@@ -44,7 +45,7 @@ export function SignInScreen() {
   });
 
   return (
-    <AuthShell>
+    <AuthShell panelExtra={panelExtra}>
       <div className="grid gap-8">
         <header className="grid gap-2">
           <h1 className="font-display text-4xl font-bold tracking-tight">
