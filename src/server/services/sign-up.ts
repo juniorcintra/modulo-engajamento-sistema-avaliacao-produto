@@ -8,7 +8,7 @@ const UNIQUE_VIOLATION = "23505";
 
 export class EmailAlreadyRegisteredError extends Error {
   constructor() {
-    super("Email já cadastrado");
+    super("Este email já tem uma conta. Use outro email.");
   }
 }
 

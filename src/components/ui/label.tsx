@@ -6,7 +6,7 @@ function Label({ className, ...props }: ComponentProps<"label">) {
     // biome-ignore lint/a11y/noLabelWithoutControl: o controle é associado via htmlFor pelo consumidor
     <label
       data-slot="label"
-      className={cn("text-sm font-medium leading-none select-none", className)}
+      className={cn("text-sm font-semibold text-foreground", className)}
       {...props}
     />
   );
